@@ -2,6 +2,15 @@ const axios = require('axios');
 const moment = require('moment');
 const colors = require('colors');
 
+const { Pool } = require('pg')
+const pool = new Pool({
+    user: 'ko',
+    host: '185.176.25.157',
+    database: 'mango',
+    password: '97136842',
+    port: 5432,
+});
+
 moment.locale('ru');
 
 const date = '2018-01-02';
@@ -50,4 +59,13 @@ const getCallsPerDay = (date) => {
 };
 
 getCallsPerDay(date);
+
+const query = {
+    text: 'SELECT * from calls ORDER BY id DESC LIMIT 1',
+};
+
+pool
+    .query(query)
+    .then(res => console.table(res.rows[0]))
+    .catch(e => console.error(e));
 
