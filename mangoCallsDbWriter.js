@@ -129,7 +129,7 @@ setInterval(() => {
                 console.log('С момента последнего обновления прошло больше 30 дней');
                 dateTo = moment.unix(data[0].start).add(10, 'days')
             }
-            return getCallsInRange(moment.unix(data[0].start), dateTo);
+            return getCallsInRange(moment.unix(data[0].start + 1), dateTo);
         });
     } else {
         console.log('Предыдущий запрос в процессе');
