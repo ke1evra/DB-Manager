@@ -118,7 +118,7 @@ const getCallsPerDay = (date) => {
 
 let inProgress = false;
 
-setInterval(() => {
+const getNWrite = () => {
     if (!inProgress){
         inProgress = true;
         db.any('SELECT * from calls ORDER BY id DESC LIMIT 1').then((data) => {
@@ -129,9 +129,15 @@ setInterval(() => {
                 console.log('С момента последнего обновления прошло больше 30 дней');
                 dateTo = moment.unix(data[0].start).add(10, 'days')
             }
-            return getCallsInRange(moment.unix(data[0].start + 1), dateTo);
+            return getCallsInRange(moment.unix(data[0].start*1 + 1), dateTo);
         });
     } else {
         console.log('Предыдущий запрос в процессе');
     }
+};
+
+
+getNWrite();
+setInterval(() => {
+    getNWrite();
 },300000);
