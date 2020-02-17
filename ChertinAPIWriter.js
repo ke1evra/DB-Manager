@@ -25,13 +25,13 @@ const dbInsert = (values, cols) => {
         const query = pgp.helpers.insert(values, cols);
         return db.none(query)
             .then(data => {
-                console.log(query);
+                // console.log(query);
                 console.log('Данные успешно записаны'.green);
             })
             .catch(error => {
                 console.log(error);
             }).finally(function () {
-                inProgress = false;
+                // inProgress = false;
                 // console.log(`Скрипт выполнен`.red)
             });
     } else {
@@ -101,41 +101,63 @@ const getCostPerDay = (day, project) => {
     const to = moment(day).format('YYYY-MM-DD');
     return getCostInRange(from, to, project);
 };
+//
+const getCostPer10days = (day, project) => {
+    const from = moment(day).format('YYYY-MM-DD');
+    const to = moment(day).add(10, 'days').format('YYYY-MM-DD');
+    return getCostInRange(from, to, project);
+};
 
 
 
 
 let inProgress = false;
 
-const getNWrite = () => {
+const getNWrite = (project) => {
     if (!inProgress){
         inProgress = true;
-        db.any('SELECT * from cost_per_day ORDER BY id DESC LIMIT 1')
+        return db.any(`SELECT * from cost_per_day WHERE cost_per_day.shop='${project}' ORDER BY id DESC LIMIT 1`)
             .then((data) => {
                 // console.log('getNWrite 1st then', data);
-                    if (data.length) {
+                    if(moment().subtract(1, 'day').format('YYYY-MM-DD') === moment(data[0].date).format('YYYY-DD-MM')) {
+                        console.log('Данные по проекту ${project} актуальны. Обновление отменено')
+                    } else if (data.length) {
                         let lastModified = moment(data[0].date);
-                        console.table(data);
-                        console.log('Последняя запись в БД от:', moment(data[0].date).format('YYYY-DD-MM').toString().green);
-                        return getCostPerDay(lastModified.add(1, 'day'), 'vkostume');
+                        console.table('\n\n' + data);
+                        console.log(`Последняя запись в БД по проекту ${project} от:`, moment(data[0].date).format('YYYY-DD-MM').toString().green);
+
+                        return getCostPerDay(lastModified.add(1, 'day'), project);
                     } else {
                         console.log('Таблица пустая');
-                        return getCostPerDay(date, 'vkostume');
+                        return getCostPerDay(date, project);
                     }
-
             }).then( data => {
-                // console.log('getNWrite 2st then', data);
-                insertCostPerDay(data[0], 'vkostume');
-                insertOrderSourse(data[0], 'vkostume');
+                if(data.length){
+                    insertCostPerDay(data[0], project);
+                    insertOrderSourse(data[0], project);
+                } else {
+                    console.log('Пустой массив с данными.')
+                }
             })
-            .catch(e => console.log(e));
+            .catch(e => {
+                console.log(e);
+            })
+            .finally(() => {
+                switchProject();
+                inProgress = false;
+            });
     } else {
-        console.log('Предыдущий запрос в процессе');
+        console.log(`Предыдущий запрос по проекту ${project} в процессе`);
     }
 };
 
+const projects = ['vkostume', 'vipbikini', 'military', 'tutkresla'];
+const switchProject = () => {
+    projects.push(projects[0]);
+    projects.shift();
+};
 
-getNWrite();
-// setInterval(() => {
-//     getNWrite();
-// },300000);
+// getNWrite();
+setInterval( () => {
+    getNWrite(projects[0]);
+},3000);
