@@ -132,12 +132,8 @@ const getNWrite = (project) => {
                         return getCostPerDay(date, project);
                     }
             }).then( data => {
-                if(data[0].data){
                     insertCostPerDay(data[0], project);
                     insertOrderSourse(data[0], project);
-                } else {
-                    console.log('Пустой массив с данными.')
-                }
             })
             .catch(e => {
                 console.log(e);
