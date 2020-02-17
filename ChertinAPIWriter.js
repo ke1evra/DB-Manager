@@ -123,7 +123,7 @@ const getNWrite = (project) => {
                         console.log('Данные по проекту ${project} актуальны. Обновление отменено')
                     } else if (data.length) {
                         let lastModified = moment(data[0].date);
-                        console.table('\n\n' + data);
+                        // console.table('\n\n' + data);
                         console.log(`Последняя запись в БД по проекту ${project} от:`, moment(data[0].date).format('YYYY-DD-MM').toString().green);
 
                         return getCostPerDay(lastModified.add(1, 'day'), project);
@@ -132,7 +132,7 @@ const getNWrite = (project) => {
                         return getCostPerDay(date, project);
                     }
             }).then( data => {
-                if(data.length){
+                if(data[0].data){
                     insertCostPerDay(data[0], project);
                     insertOrderSourse(data[0], project);
                 } else {
@@ -160,4 +160,4 @@ const switchProject = () => {
 // getNWrite();
 setInterval( () => {
     getNWrite(projects[0]);
-},3000);
+},5000);
