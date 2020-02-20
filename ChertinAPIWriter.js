@@ -43,30 +43,39 @@ const dbInsert = (values, cols) => {
 const insertCostPerDay = (data, shop) => {
     // console.log('insertCostPerDay', data);
     // console.log('data.costs', data.costs);
-    const values = Object.keys(data.costs).map((item, i) => {
-        return {
-            date: data.date,
-            source: item,
-            cost: Math.round(data.costs[item]),
-            shop
-        }
-    });
-    const cols = new pgp.helpers.ColumnSet(['date', 'source', 'cost', 'shop'], {table: 'cost_per_day'});
-    dbInsert(values, cols);
+    if (data.costs) {
+        const values = Object.keys(data.costs).map((item, i) => {
+            return {
+                date: data.date,
+                source: item,
+                cost: Math.round(data.costs[item]),
+                shop
+            }
+        });
+        const cols = new pgp.helpers.ColumnSet(['date', 'source', 'cost', 'shop'], {table: 'cost_per_day'});
+        dbInsert(values, cols);
+    } else {
+        console.log('Нет данных для записи. Отмена записи в БД')
+    }
+
 };
 
 const insertOrderSourse = (data, shop) => {
-    const values = data.roistatStats.map((item) => {
-        return {
-            date: data.date,
-            order_id: item.id,
-            source: item.source,
-            shop
+    if (data.roistatStats.length) {
+        const values = data.roistatStats.map((item) => {
+            return {
+                date: data.date,
+                order_id: item.id,
+                source: item.source,
+                shop
 
-        };
-    });
-    const cols = new pgp.helpers.ColumnSet(['date', 'order_id', 'source', 'shop'], {table: 'order_source'});
-    dbInsert(values, cols);
+            };
+        });
+        const cols = new pgp.helpers.ColumnSet(['date', 'order_id', 'source', 'shop'], {table: 'order_source'});
+        dbInsert(values, cols);
+    } else {
+        console.log('Нет данных для записи. Отмена записи в БД')
+    }
 };
 
 // Получает данные по звонкам в интервале
@@ -83,8 +92,12 @@ const getCostInRange = (dateFrom, dateTo, project) => {
             console.log('Данные успешно получены:'.green);
             console.log(`Всего строк получено: ${data.length.toString().green}`);
             // console.log(response.data.map(item => item.call_duration));
+            if(response.data.status === 'success'){
+                return data;
+            } else {
+                throw new Error('Получен статус отличный от success');
+            }
 
-            return data;
         })
         .catch(function (err){
             console.error(err);
@@ -118,22 +131,25 @@ const getNWrite = (project) => {
         inProgress = true;
         return db.any(`SELECT * from cost_per_day WHERE cost_per_day.shop='${project}' ORDER BY id DESC LIMIT 1`)
             .then((data) => {
-                // console.log('getNWrite 1st then', data);
-                    if(moment().subtract(1, 'day').format('YYYY-MM-DD') === moment(data[0].date).format('YYYY-DD-MM')) {
-                        console.log('Данные по проекту ${project} актуальны. Обновление отменено')
+                const yesterday = moment().subtract(1, 'day');
+                const lastModified = moment(data[0].date);
+                    if(yesterday.format('YYYY-DD-MM') === lastModified.format('YYYY-DD-MM')) {
+                        console.log(`Данные по проекту ${project} актуальны. Обновление отменено`)
                     } else if (data.length) {
                         let lastModified = moment(data[0].date);
-                        // console.table('\n\n' + data);
                         console.log(`Последняя запись в БД по проекту ${project} от:`, moment(data[0].date).format('YYYY-DD-MM').toString().green);
-
                         return getCostPerDay(lastModified.add(1, 'day'), project);
                     } else {
                         console.log('Таблица пустая');
                         return getCostPerDay(date, project);
                     }
             }).then( data => {
+                if (data && data.length){
                     insertCostPerDay(data[0], project);
                     insertOrderSourse(data[0], project);
+                } else {
+                    console.log('Нет данных для записи в базу');
+                };
             })
             .catch(e => {
                 console.log(e);
@@ -156,4 +172,4 @@ const switchProject = () => {
 // getNWrite();
 setInterval( () => {
     getNWrite(projects[0]);
-},5000);
+},3600000);
