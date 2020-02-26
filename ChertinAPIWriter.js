@@ -172,4 +172,4 @@ const switchProject = () => {
 // getNWrite();
 setInterval( () => {
     getNWrite(projects[0]);
-},3600000);
+},3000);
