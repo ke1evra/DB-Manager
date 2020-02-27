@@ -116,7 +116,7 @@ const update = () => {
     }
 };
 
-
+update();
 setInterval(() => {
     update();
 }, 3600000);
