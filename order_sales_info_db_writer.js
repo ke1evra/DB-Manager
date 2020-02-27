@@ -1,10 +1,10 @@
-const eccrmDB = require('./controller/vksDb');
-const vpsDB = require('./controller/vpsDb');
 const moment = require('moment');
 const colors = require('colors');
+const eccrmDB = require('./controller/vksDb');
+const vpsDB = require('./controller/vpsDb');
 
-const getOrderSalesData = async (from, to) => {
-    const query = (from, to) => `
+const getOrderSalesData = (from, to) => {
+    const query = (fromDate, toDate) => `
     SELECT  
       o.order_number,
       o.created_at,
@@ -21,47 +21,102 @@ const getOrderSalesData = async (from, to) => {
     LEFT JOIN
       \`ec-crm\`.item_order_status AS i_o_s ON i_o_s.id = i_o.status_id 
     WHERE
-      o.created_at BETWEEN '${from}' AND '${to}' 
+      o.created_at BETWEEN '${fromDate}' AND '${toDate}' 
       AND 
       i_o.status_id IN (5, 4)
     GROUP BY o.order_number
-    ORDER BY o.created_at DESC
+    ORDER BY o.created_at ASC
     `.trim();
-    await eccrmDB.query(query(from,to), null, async function (data, error) {
-        if(data){
-            console.table(data);
-            return data;
-        }else if(error){
-            console.log(error);
-        }
+
+    return new Promise((resolve, reject) => {
+        eccrmDB.query(query(from, to), null, (data, error) => {
+            if (data) {
+                resolve(data);
+            } if (error) {
+                reject(error);
+            }
+        });
     });
 };
 
 const checkVpsDataState = () => {
     let lastUpdated = '2017-01-01';
-    //let diff = 0;
-    return vpsDB.any('SELECT * from order_sales ORDER BY created_at DESC LIMIT 1').then((data) => {
+    return vpsDB.db.any('SELECT * from order_sales ORDER BY created_at DESC LIMIT 1').then((data) => {
         if (data.length) {
-            console.table(data);
             lastUpdated = data[0].created_at;
-            console.log('Последняя запись в БД от:', moment(lastUpdated).format('YYYY-DD-MM HH:mm:ss').toString().green);
-            //diff = moment().diff(moment(lastUpdated), 'days');
-            // if ( diff > 90 ) {
-            //     console.log(`Последняя запись в БД более 90 дней (${diff})`);
-            // }
+            console.log('Последняя запись в БД от:', moment(lastUpdated).format('YYYY-MM-DD HH:mm:ss').toString().green);
         }
-        return lastUpdated;
+        return moment(lastUpdated).add(1, 'second').toDate();
     });
 };
 
+const insertOrderSalesInfo = (data) => {
+    if (data && data.length) {
+        const values = data.map((item) => ({
+            order_number: item.order_number,
+            created_at: item.created_at,
+            net_price: item.net_price,
+            order_sum: item.order_sum,
+        }));
+        const cols = new vpsDB.pgp.helpers.ColumnSet(['order_number', 'created_at', 'net_price', 'order_sum'], { table: 'order_sales' });
+        vpsDB.dbInsert(values, cols);
+    } else {
+        console.log('Нет данных для записи. Отмена записи в БД');
+    }
+};
 
-// запускаем прогу
-(async ()=>{
-    const lastUpdated = moment(await checkVpsDataState()).format('YYYY-MM-DD HH:mm:ss');
-    const toDate = moment(lastUpdated).add(30, 'days').format('YYYY-MM-DD HH:mm:ss');
-    console.log(lastUpdated, toDate);
-    await getOrderSalesData(lastUpdated, toDate)
+const deleteOrderSalesInfoFromDate = (from) => {
+    console.log(from);
+    const query = `
+        delete from order_sales
+        where created_at > to_timestamp('${from}', 'YYYY-MM-DD HH24:MI:SS');
+    `.trim();
+    return vpsDB.db.any(query)
+        .then(() => {
+            console.log('Удаление успешно произведено'.green);
+        });
+};
 
-})();
+let inProgress = false;
+
+const update = () => {
+    if (!inProgress) {
+        inProgress = true;
+        let diff = -1;
+        checkVpsDataState()
+            .then((lastUpdated) => {
+                diff = moment().diff(moment(lastUpdated), 'days');
+                const fromDate = moment(lastUpdated).format('YYYY-MM-DD HH:mm:ss');
+                let toDate = moment().format('YYYY-MM-DD HH:mm:ss');
+                if (diff > 30) {
+                    toDate = moment(lastUpdated).add(30, 'days').format('YYYY-MM-DD HH:mm:ss');
+                }
+                if (diff > 1) {
+                    console.log(`Получаем данные по заказам за период с ${fromDate.toString().green} по ${toDate.toString().green}`);
+                    return getOrderSalesData(fromDate, toDate);
+                } if (diff === 1) {
+                    console.log('Последнее обновление - вчера. Удаляем данные за полгода чтобы актуализировать их.');
+                    return deleteOrderSalesInfoFromDate(moment().subtract(6, 'months').format('YYYY-MM-DD HH:mm:ss'));
+                }
+                return null;
+            })
+            .then((ecCrmData) => {
+                if (ecCrmData && ecCrmData.length) {
+                    insertOrderSalesInfo(ecCrmData);
+                } else {
+                    console.log('Нет данных для записи в базу или данные актуальны');
+                }
+            })
+            .catch((e) => console.log(e))
+            .finally(() => {
+                inProgress = false;
+            });
+    } else {
+        console.log('Предыдущий процесс обновления в процессе');
+    }
+};
 
 
+setInterval(() => {
+    update();
+}, 3600000);

@@ -10,7 +10,7 @@ const pgp = require('pg-promise')({
 const cn = 'postgres://ko:97136842@185.176.25.157:5432/mango';
 // Creating a new database instance from the connection details:
 const db = pgp(cn);
-const cols = new pgp.helpers.ColumnSet(['start', 'start_day', 'start_time', 'answer_time', 'answer', 'finish', 'from_number', 'to_number', 'disconnect_reason', 'line_number', 'records', 'entry_id', 'location', 'person', 'client', 'call_type', 'call_duration'], {table: 'calls'});
+const cols = new pgp.helpers.ColumnSet(['start', 'start_day', 'start_time', 'answer_time', 'answer', 'finish', 'from_number', 'to_number', 'disconnect_reason', 'line_number', 'records', 'entry_id', 'location', 'person', 'client', 'call_type', 'call_duration'], { table: 'calls' });
 
 moment.locale('ru');
 
@@ -24,57 +24,46 @@ const dbInsert = (values, cols) => {
     if (values) {
         const query = pgp.helpers.insert(values, cols);
         return db.none(query)
-            .then(data => {
-                // console.log(query);
+            .then(() => {
                 console.log('Данные успешно записаны'.green);
             })
-            .catch(error => {
+            .catch((error) => {
                 console.log(error);
-            }).finally(function () {
-                // inProgress = false;
-                // console.log(`Скрипт выполнен`.red)
-            });
-    } else {
-        console.log('Список значений пуст, запись в базу отменена.')
+            }).finally(() => true);
     }
-
+    console.log('Список значений пуст, запись в базу отменена.');
 };
 
 const insertCostPerDay = (data, shop) => {
     // console.log('insertCostPerDay', data);
     // console.log('data.costs', data.costs);
     if (data.costs) {
-        const values = Object.keys(data.costs).map((item, i) => {
-            return {
-                date: data.date,
-                source: item,
-                cost: Math.round(data.costs[item]),
-                shop
-            }
-        });
-        const cols = new pgp.helpers.ColumnSet(['date', 'source', 'cost', 'shop'], {table: 'cost_per_day'});
+        const values = Object.keys(data.costs).map((item, i) => ({
+            date: data.date,
+            source: item,
+            cost: Math.round(data.costs[item]),
+            shop,
+        }));
+        const cols = new pgp.helpers.ColumnSet(['date', 'source', 'cost', 'shop'], { table: 'cost_per_day' });
         dbInsert(values, cols);
     } else {
-        console.log('Нет данных для записи. Отмена записи в БД')
+        console.log('Нет данных для записи. Отмена записи в БД');
     }
-
 };
 
 const insertOrderSourse = (data, shop) => {
     if (data.roistatStats.length) {
-        const values = data.roistatStats.map((item) => {
-            return {
-                date: data.date,
-                order_id: item.id,
-                source: item.source,
-                shop
+        const values = data.roistatStats.map((item) => ({
+            date: data.date,
+            order_id: item.id,
+            source: item.source,
+            shop,
 
-            };
-        });
-        const cols = new pgp.helpers.ColumnSet(['date', 'order_id', 'source', 'shop'], {table: 'order_source'});
+        }));
+        const cols = new pgp.helpers.ColumnSet(['date', 'order_id', 'source', 'shop'], { table: 'order_source' });
         dbInsert(values, cols);
     } else {
-        console.log('Нет данных для записи. Отмена записи в БД')
+        console.log('Нет данных для записи. Отмена записи в БД');
     }
 };
 
@@ -86,25 +75,23 @@ const getCostInRange = (dateFrom, dateTo, project) => {
     console.log(url);
 
     return axios.get(url)
-        .then(function(response) {
-            const data = response.data.data;
+        .then((response) => {
+            const { data } = response.data;
             // console.log('getCostInRange', data);
             console.log('Данные успешно получены:'.green);
             console.log(`Всего строк получено: ${data.length.toString().green}`);
             // console.log(response.data.map(item => item.call_duration));
-            if(response.data.status === 'success'){
+            if (response.data.status === 'success') {
                 return data;
-            } else {
-                throw new Error('Получен статус отличный от success');
             }
-
+            throw new Error('Получен статус отличный от success');
         })
-        .catch(function (err){
+        .catch((err) => {
             console.error(err);
             inProgress = false;
             return err;
         })
-        .finally(function () {
+        .finally(() => {
 
         });
 };
@@ -122,45 +109,42 @@ const getCostPer10days = (day, project) => {
 };
 
 
-
-
 let inProgress = false;
 
 const getNWrite = (project) => {
-    if (!inProgress){
+    if (!inProgress) {
         inProgress = true;
         return db.any(`SELECT * from cost_per_day WHERE cost_per_day.shop='${project}' ORDER BY id DESC LIMIT 1`)
             .then((data) => {
                 const yesterday = moment().subtract(1, 'day');
                 const lastModified = moment(data[0].date);
-                    if(yesterday.format('YYYY-DD-MM') === lastModified.format('YYYY-DD-MM')) {
-                        console.log(`Данные по проекту ${project} актуальны. Обновление отменено`)
-                    } else if (data.length) {
-                        let lastModified = moment(data[0].date);
-                        console.log(`Последняя запись в БД по проекту ${project} от:`, moment(data[0].date).format('YYYY-DD-MM').toString().green);
-                        return getCostPerDay(lastModified.add(1, 'day'), project);
-                    } else {
-                        console.log('Таблица пустая');
-                        return getCostPerDay(date, project);
-                    }
-            }).then( data => {
-                if (data && data.length){
+                if (yesterday.format('YYYY-DD-MM') === lastModified.format('YYYY-DD-MM')) {
+                    console.log(`Данные по проекту ${project} актуальны. Обновление отменено`);
+                } else if (data.length) {
+                    const lastModified = moment(data[0].date);
+                    console.log(`Последняя запись в БД по проекту ${project} от:`, moment(data[0].date).format('YYYY-DD-MM').toString().green);
+                    return getCostPerDay(lastModified.add(1, 'day'), project);
+                } else {
+                    console.log('Таблица пустая');
+                    return getCostPerDay(date, project);
+                }
+            }).then((data) => {
+                if (data && data.length) {
                     insertCostPerDay(data[0], project);
                     insertOrderSourse(data[0], project);
                 } else {
                     console.log('Нет данных для записи в базу');
-                };
+                }
             })
-            .catch(e => {
+            .catch((e) => {
                 console.log(e);
             })
             .finally(() => {
                 switchProject();
                 inProgress = false;
             });
-    } else {
-        console.log(`Предыдущий запрос по проекту ${project} в процессе`);
     }
+    console.log(`Предыдущий запрос по проекту ${project} в процессе`);
 };
 
 const projects = ['vkostume', 'vipbikini', 'military', 'tutkresla'];
@@ -170,6 +154,6 @@ const switchProject = () => {
 };
 
 // getNWrite();
-setInterval( () => {
+setInterval(() => {
     getNWrite(projects[0]);
-},3000);
+}, 3000);
