@@ -14,7 +14,7 @@ const cols = new pgp.helpers.ColumnSet(['start', 'start_day', 'start_time', 'ans
 
 moment.locale('ru');
 
-const date = '2017-02-01';
+const date = '2017-03-01';
 const defaults = {
     from: moment(date).format('YYYY-MM-DD'),
     to: moment(date).format('YYYY-MM-DD'),
@@ -79,12 +79,14 @@ const getCostInRange = (dateFrom, dateTo, project) => {
             const { data } = response.data;
             // console.log('getCostInRange', data);
             console.log('Данные успешно получены:'.green);
-            console.log(`Всего строк получено: ${data.length.toString().green}`);
+            const message = data && data.length ? `Всего строк получено: ${data.length.toString().green}` : 'Нет данных за выбранный период';
+            console.log(message);
+            //console.log(response);
             // console.log(response.data.map(item => item.call_duration));
             if (response.data.status === 'success') {
                 return data;
             }
-            throw new Error('Получен статус отличный от success');
+            return null;
         })
         .catch((err) => {
             console.error(err);
@@ -117,11 +119,11 @@ const getNWrite = (project) => {
         return db.any(`SELECT * from cost_per_day WHERE cost_per_day.shop='${project}' ORDER BY id DESC LIMIT 1`)
             .then((data) => {
                 const yesterday = moment().subtract(1, 'day');
-                const lastModified = moment(data[0].date);
+                let lastModified = moment(date);
                 if (yesterday.format('YYYY-DD-MM') === lastModified.format('YYYY-DD-MM')) {
                     console.log(`Данные по проекту ${project} актуальны. Обновление отменено`);
                 } else if (data.length) {
-                    const lastModified = moment(data[0].date);
+                    lastModified = moment(data[0].date);
                     console.log(`Последняя запись в БД по проекту ${project} от:`, moment(data[0].date).format('YYYY-DD-MM').toString().green);
                     return getCostPerDay(lastModified.add(1, 'day'), project);
                 } else {
