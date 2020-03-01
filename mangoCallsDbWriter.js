@@ -2,14 +2,6 @@ const axios = require('axios');
 const moment = require('moment');
 const colors = require('colors');
 
-// const { Pool } = require('pg')
-// const pool = new Pool({
-//     user: 'ko',
-//     host: '185.176.25.157',
-//     database: 'mango',
-//     password: '97136842',
-//     port: 5432,
-// });
 
 // Loading and initializing the library:
 const pgp = require('pg-promise')({
@@ -26,17 +18,22 @@ moment.locale('ru');
 const date = '2018-01-02';
 
 const dbInsert = (values, cols) => {
-    const query = pgp.helpers.insert(values, cols);
-    return db.none(query)
-        .then((data) => {
-            console.log('Данные успешно записаны'.green);
-        })
-        .catch((error) => {
-            console.log(error);
-        }).finally(() => {
-            inProgress = false;
-            // console.log(`Скрипт выполнен`.red)
-        });
+    if (!values.length) {
+        console.log('Нечего записывать в базу');
+        inProgress = false;
+    } else {
+        const query = pgp.helpers.insert(values, cols);
+        return db.none(query)
+            .then((data) => {
+                console.log('Данные успешно записаны'.green);
+            })
+            .catch((error) => {
+                console.log(error);
+            }).finally(() => {
+                inProgress = false;
+                // console.log(`Скрипт выполнен`.red)
+            });
+    }
 };
 
 // Получает данные по звонкам в интервале
@@ -65,7 +62,6 @@ const getCallsInRange = (dateFrom, dateTo) => {
         });
 };
 
-
 // Получает данные за месяц с начала месяца от указанной даты
 const getCallsPerMonth = (date) => {
     console.log(`Получаем данные за месяц на основе этой даты ${moment(date).format('ll')}`);
@@ -90,28 +86,6 @@ const getCallsPerDay = (date) => {
             return err;
         });
 };
-
-// getCallsPerDay(date);
-
-// const query = {
-//     text: 'SELECT * from calls ORDER BY id DESC LIMIT 1',
-// };
-
-// pool
-//     .query(query)
-//     .then(res => console.table(res.rows[0]))
-//     .catch(e => console.error(e));
-
-
-// db.any('SELECT * from calls ORDER BY id DESC LIMIT 1').then((data)=>{
-//     console.table(data);
-//     console.log('Последняя запись в БД от:', moment.unix(data[0].start).format('YYYY-DD-MM HH:mm:ss').toString().green);
-//     if( (+ new Date() / 1000 - data[0].start * 1) > 2629743) {
-//         console.log('С момента последнего обновления прошло больше 30 дней');
-//         getCallsInRange(moment.unix(data[0].start), moment.unix(data[0].start).add(10, 'days'));
-//     }
-// });
-
 
 let inProgress = false;
 
