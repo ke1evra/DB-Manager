@@ -119,16 +119,16 @@ const getNWrite = (project) => {
         return db.any(`SELECT * from cost_per_day WHERE cost_per_day.shop='${project}' ORDER BY id DESC LIMIT 1`)
             .then((data) => {
                 const yesterday = moment().subtract(1, 'day');
-                const lastModified = data[0].date ? moment(data[0].date) : moment(date);
-                console.log(yesterday.format('YYYY-MM-DD'), lastModified.format('YYYY-MM-DD'));
+                let lastModified = data.length ? moment(data[0].date) : moment(date);
+                console.log(`Последняя запись в БД по проекту ${project} от:`, moment(data[0].date).format('YYYY-MM-DD').toString().green);
                 if (yesterday.format('YYYY-MM-DD') === lastModified.format('YYYY-MM-DD')) {
                     console.log(`Данные по проекту ${project} актуальны. Обновление отменено`);
                 } else if (data.length) {
-                    console.log(`Последняя запись в БД по проекту ${project} от:`, moment(data[0].date).format('YYYY-MM-DD').toString().green);
+                    lastModified = moment(data[0].date);
                     return getCostPerDay(lastModified.add(1, 'day'), project);
                 } else {
                     console.log('Таблица пустая');
-                    return getCostPerDay(date, project);
+                    return getCostPerDay(moment(date), project);
                 }
             }).then((data) => {
                 if (data && data.length) {
@@ -155,7 +155,7 @@ const switchProject = () => {
     projects.shift();
 };
 
-// getNWrite();
+getNWrite(projects[0]);
 setInterval(() => {
     getNWrite(projects[0]);
 }, 60 * 60 * 1000);
