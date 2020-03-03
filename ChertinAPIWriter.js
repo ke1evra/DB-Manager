@@ -81,7 +81,7 @@ const getCostInRange = (dateFrom, dateTo, project) => {
             console.log('Данные успешно получены:'.green);
             const message = data && data.length ? `Всего строк получено: ${data.length.toString().green}` : 'Нет данных за выбранный период';
             console.log(message);
-            //console.log(response);
+            // console.log(response);
             // console.log(response.data.map(item => item.call_duration));
             if (response.data.status === 'success') {
                 return data;
@@ -119,12 +119,12 @@ const getNWrite = (project) => {
         return db.any(`SELECT * from cost_per_day WHERE cost_per_day.shop='${project}' ORDER BY id DESC LIMIT 1`)
             .then((data) => {
                 const yesterday = moment().subtract(1, 'day');
-                let lastModified = moment(date);
-                if (yesterday.format('YYYY-DD-MM') === lastModified.format('YYYY-DD-MM')) {
+                const lastModified = data[0].date ? moment(data[0].date) : moment(date);
+                console.log(yesterday.format('YYYY-MM-DD'), lastModified.format('YYYY-MM-DD'));
+                if (yesterday.format('YYYY-MM-DD') === lastModified.format('YYYY-MM-DD')) {
                     console.log(`Данные по проекту ${project} актуальны. Обновление отменено`);
                 } else if (data.length) {
-                    lastModified = moment(data[0].date);
-                    console.log(`Последняя запись в БД по проекту ${project} от:`, moment(data[0].date).format('YYYY-DD-MM').toString().green);
+                    console.log(`Последняя запись в БД по проекту ${project} от:`, moment(data[0].date).format('YYYY-MM-DD').toString().green);
                     return getCostPerDay(lastModified.add(1, 'day'), project);
                 } else {
                     console.log('Таблица пустая');
@@ -158,4 +158,4 @@ const switchProject = () => {
 // getNWrite();
 setInterval(() => {
     getNWrite(projects[0]);
-}, 3000);
+}, 60 * 60 * 1000);
