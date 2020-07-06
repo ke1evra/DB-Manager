@@ -31,6 +31,7 @@ const getOrderSalesData = (from, to) => {
     return new Promise((resolve, reject) => {
         eccrmDB.query(query(from, to), null, (data, error) => {
             if (data) {
+                console.log(`Полученные данные\n${data}`);
                 resolve(data);
             } if (error) {
                 reject(error);
