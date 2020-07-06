@@ -8,7 +8,7 @@ const getOrderSalesData = (from, to) => {
     SELECT  
       o.order_number,
       o.created_at,
-      ROUND(SUM(i_mod.prime_cost),2) AS net_price,
+      ROUND(SUM(i_mod.prime_cost)) AS net_price,
       o.order_sum
     FROM 
       \`ec-crm\`.item_order AS i_o
