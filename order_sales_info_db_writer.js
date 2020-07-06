@@ -31,7 +31,7 @@ const getOrderSalesData = (from, to) => {
     return new Promise((resolve, reject) => {
         eccrmDB.query(query(from, to), null, (data, error) => {
             if (data) {
-                console.log(`Полученные данные\n${JSON.stringify(data)}`);
+                // console.log(`Полученные данные\n${JSON.stringify(data)}`);
                 resolve(data);
             } if (error) {
                 reject(error);
@@ -120,4 +120,5 @@ const update = () => {
 update();
 setInterval(() => {
     update();
-}, 3600000);
+}, 30 * 1000);
+//3600000
