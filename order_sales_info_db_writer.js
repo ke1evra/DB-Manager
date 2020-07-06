@@ -120,5 +120,5 @@ const update = () => {
 update();
 setInterval(() => {
     update();
-}, 30 * 1000);
+}, 3600 * 1000);
 //3600000
