@@ -69,7 +69,7 @@ const insertOrderSourse = (data, shop) => {
 
 // Получает данные по звонкам в интервале
 const getCostInRange = (dateFrom, dateTo, project) => {
-    const url = `http://wabot.host/api/getStats?project=${project}&dateFrom=${dateFrom}&dateTo=${dateTo}&token=jh3145Jjhn234p45665swd`;
+    const url = `http://morgenstern.fun/api/getStats?project=${project}&dateFrom=${dateFrom}&dateTo=${dateTo}&token=jh3145Jjhn234p45665swd`;
     console.log(`Получаем данные по расходу за период c ${moment(dateFrom).format('LL').toString().green} по ${moment(dateTo).format('LL').toString().green}`);
     console.log('Выполняем запрос по адресу:'.red);
     console.log(url);
