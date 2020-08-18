@@ -59,6 +59,12 @@ const checkVpsDataState = () => {
     });
 };
 
+const updateViews = () => {
+    return vpsDB.db.any()
+        .then(res => console.log('Вьюхи обновлены'))
+        .catch(e => console.log(e))
+};
+
 const insertOrderSalesInfo = (data) => {
     if (data && data.length) {
         const values = data.map((item) => ({
@@ -91,7 +97,7 @@ const deleteOrderSalesInfoFromDate = (from) => {
 };
 
 let inProgress = false;
-const defaultInterval = 3600 * 1000;
+const defaultInterval = 30000;
 let updateInterval = defaultInterval;
 
 const update = () => {
@@ -105,10 +111,11 @@ const update = () => {
                 let toDate = moment().format('YYYY-MM-DD HH:mm:ss');
                 if (diff > 30) {
                     toDate = moment(lastUpdated).add(30, 'days').format('YYYY-MM-DD HH:mm:ss');
-                    updateInterval = 3000 * 10;
+
                 }
                 if (diff > 1) {
                     console.log(`Получаем данные по заказам за период с ${fromDate.toString().green} по ${toDate.toString().green}`);
+                    updateInterval = 3600 * 1000;
                     return getOrderSalesData(fromDate, toDate);
                 } if (diff === 1) {
                     console.log('Последнее обновление - вчера. Удаляем данные за полгода чтобы актуализировать их.');
