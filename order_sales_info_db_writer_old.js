@@ -5,29 +5,21 @@ const vpsDB = require('./controller/vpsDb');
 
 const getOrderSalesData = (from, to) => {
     const query = (fromDate, toDate) => `
-    SELECT
+    SELECT  
       o.order_number,
       o.created_at,
       ROUND(SUM(i_mod.prime_cost)) AS net_price,
-      o.order_sum,
-      s.title_eng AS project_name,
-      o_s.slug AS order_status,
-      o.dop_trata AS extra_expence,
-      COUNT(i_o.id) AS item_count
-    FROM
+      o.order_sum
+    FROM 
       \`ec-crm\`.item_order AS i_o
-    LEFT JOIN
+    LEFT JOIN 
       \`ec-crm\`.items AS i ON i.id = i_o.order_id
-    LEFT JOIN
+    LEFT JOIN 
       \`ec-crm\`.item_modification AS i_mod ON i_mod.id = i_o.item_modification_id
     LEFT JOIN
       \`ec-crm\`.orders AS o ON o.id = i_o.order_id
     LEFT JOIN
-      \`ec-crm\`.item_order_status AS i_o_s ON i_o_s.id = i_o.status_id
-    LEFT JOIN
-      \`ec-crm\`.shops AS s ON s.id = o.shop_id
-    LEFT JOIN
-      \`ec-crm\`.order_status AS o_s ON o_s.id = o.status_id
+      \`ec-crm\`.item_order_status AS i_o_s ON i_o_s.id = i_o.status_id 
     WHERE
       o.created_at BETWEEN '${fromDate}' AND '${toDate}' 
       AND 
@@ -66,12 +58,8 @@ const insertOrderSalesInfo = (data) => {
             created_at: item.created_at,
             net_price: item.net_price,
             order_sum: item.order_sum,
-            project_name: item.project_name,
-            order_status: item.order_status,
-            extra_expence: item.extra_expence,
-            item_count: item.item_count
         }));
-        const cols = new vpsDB.pgp.helpers.ColumnSet(['order_number', 'created_at', 'net_price', 'order_sum','project_name','order_status','extra_expence','item_count'], { table: 'order_sales' });
+        const cols = new vpsDB.pgp.helpers.ColumnSet(['order_number', 'created_at', 'net_price', 'order_sum'], { table: 'order_sales' });
         vpsDB.dbInsert(values, cols);
     } else {
         console.log('Нет данных для записи. Отмена записи в БД');
@@ -91,8 +79,6 @@ const deleteOrderSalesInfoFromDate = (from) => {
 };
 
 let inProgress = false;
-const defaultInterval = 3600 * 1000;
-let updateInterval = defaultInterval;
 
 const update = () => {
     if (!inProgress) {
@@ -105,7 +91,6 @@ const update = () => {
                 let toDate = moment().format('YYYY-MM-DD HH:mm:ss');
                 if (diff > 30) {
                     toDate = moment(lastUpdated).add(30, 'days').format('YYYY-MM-DD HH:mm:ss');
-                    updateInterval = 3000 * 10;
                 }
                 if (diff > 1) {
                     console.log(`Получаем данные по заказам за период с ${fromDate.toString().green} по ${toDate.toString().green}`);
@@ -135,5 +120,5 @@ const update = () => {
 update();
 setInterval(() => {
     update();
-}, updateInterval);
+}, 3600 * 1000);
 //3600000
