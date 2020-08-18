@@ -60,7 +60,9 @@ const checkVpsDataState = () => {
 };
 
 const updateViews = () => {
-    return vpsDB.db.any('REFRESH MATERIALIZED VIEW tg_bot_orders_by_day;REFRESH MATERIALIZED VIEW tg_bot_orders_by_month;REFRESH MATERIALIZED VIEW tg_bot_orders_by_year;')
+    return vpsDB.db.any('REFRESH MATERIALIZED VIEW tg_bot_orders_by_day')
+        .then(res => vpsDB.db.any('REFRESH MATERIALIZED VIEW tg_bot_orders_by_month'))
+        .then(res => vpsDB.db.any('REFRESH MATERIALIZED VIEW tg_bot_orders_by_year'))
         .then(res => console.log('Вьюхи обновлены'))
         .catch(e => console.log(e))
 };
