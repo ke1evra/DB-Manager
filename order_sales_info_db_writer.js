@@ -60,7 +60,7 @@ const checkVpsDataState = () => {
 };
 
 const updateViews = () => {
-    return vpsDB.db.any()
+    return vpsDB.db.any('REFRESH MATERIALIZED VIEW tg_bot_orders_by_day;REFRESH MATERIALIZED VIEW tg_bot_orders_by_month;REFRESH MATERIALIZED VIEW tg_bot_orders_by_year;')
         .then(res => console.log('Вьюхи обновлены'))
         .catch(e => console.log(e))
 };
@@ -129,7 +129,7 @@ const update = () => {
                 } else {
                     console.log('Нет данных для записи в базу или данные актуальны');
                 }
-            })
+            }).then(res => updateViews())
             .catch((e) => console.log(e))
             .finally(() => {
                 inProgress = false;
