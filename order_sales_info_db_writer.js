@@ -30,8 +30,8 @@ const getOrderSalesData = (from, to) => {
       \`ec-crm\`.order_status AS o_s ON o_s.id = o.status_id
     WHERE
       o.created_at BETWEEN '${fromDate}' AND '${toDate}' 
-      AND 
-      i_o.status_id IN (5, 4)
+      -- AND 
+      -- i_o.status_id IN (5, 4)
     GROUP BY o.order_number
     ORDER BY o.created_at ASC
     `.trim();
