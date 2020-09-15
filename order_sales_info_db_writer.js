@@ -8,6 +8,8 @@ const getOrderSalesData = (from, to) => {
     SELECT
       o.order_number,
       o.created_at,
+      o.phone_key,
+      o.client_name,
       ROUND(SUM(i_mod.prime_cost)) AS net_price,
       o.order_sum,
       s.title_eng AS project_name,
@@ -72,6 +74,8 @@ const insertOrderSalesInfo = (data) => {
         const values = data.map((item) => ({
             order_number: item.order_number,
             created_at: item.created_at,
+            phone_key: item.phone_key,
+            client_name: item.client_name,
             net_price: item.net_price,
             order_sum: item.order_sum,
             project_name: item.project_name,
@@ -79,7 +83,7 @@ const insertOrderSalesInfo = (data) => {
             extra_expence: item.extra_expence,
             item_count: item.item_count
         }));
-        const cols = new vpsDB.pgp.helpers.ColumnSet(['order_number', 'created_at', 'net_price', 'order_sum','project_name','order_status','extra_expence','item_count'], { table: 'order_sales' });
+        const cols = new vpsDB.pgp.helpers.ColumnSet(['order_number', 'created_at', 'phone_key', 'client_name', 'net_price', 'order_sum','project_name','order_status','extra_expence','item_count'], { table: 'order_sales' });
         vpsDB.dbInsert(values, cols);
     } else {
         console.log('Нет данных для записи. Отмена записи в БД');
