@@ -41,10 +41,10 @@ const getOrderSalesData = (from, to) => {
     return new Promise((resolve, reject) => {
         eccrmDB.query(query(from, to), null, (data, error) => {
             if (data) {
-                data.map((item)=>{
-                    console.log('item.order_number', item.order_number);
-                    item.order_number = parseInt(item.order_number);
-                });
+                // data.map((item)=>{
+                //     console.log('item.order_number', item.order_number);
+                //     item.order_number = parseInt(item.order_number);
+                // });
                 resolve(data);
             } if (error) {
                 reject(error);
