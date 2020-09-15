@@ -42,6 +42,9 @@ const getOrderSalesData = (from, to) => {
         eccrmDB.query(query(from, to), null, (data, error) => {
             if (data) {
                 data.map((item)=>{
+                    if(item.order_id == ""){
+                        console.log(item)
+                    }
                     item.order_id = parseInt(item.order_id);
                 });
                 resolve(data);
