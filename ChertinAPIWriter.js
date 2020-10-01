@@ -125,10 +125,10 @@ const getNWrite = (project) => {
                     console.log(`Данные по проекту ${project} актуальны. Обновление отменено`);
                 } else if (data.length) {
                     lastModified = moment(data[0].date);
-                    return getCostPerDay(lastModified.add(1, 'day'), project);
+                    return getCostPer10days(lastModified.add(1, 'day'), project);
                 } else {
                     console.log('Таблица пустая');
-                    return getCostPerDay(moment(date), project);
+                    return getCostPer10days(moment(date), project);
                 }
             }).then((data) => {
                 if (data && data.length) {
