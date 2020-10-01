@@ -64,13 +64,11 @@ const checkVpsDataState = () => {
     });
 };
 
-const updateViews = () => {
-    return vpsDB.db.any('REFRESH MATERIALIZED VIEW tg_bot_orders_by_day')
-        .then(res => vpsDB.db.any('REFRESH MATERIALIZED VIEW tg_bot_orders_by_month'))
-        .then(res => vpsDB.db.any('REFRESH MATERIALIZED VIEW tg_bot_orders_by_year'))
-        .then(res => console.log('Вьюхи обновлены'))
-        .catch(e => console.log(e))
-};
+const updateViews = () => vpsDB.db.any('REFRESH MATERIALIZED VIEW tg_bot_orders_by_day')
+    .then((res) => vpsDB.db.any('REFRESH MATERIALIZED VIEW tg_bot_orders_by_month'))
+    .then((res) => vpsDB.db.any('REFRESH MATERIALIZED VIEW tg_bot_orders_by_year'))
+    .then((res) => console.log('Вьюхи обновлены'))
+    .catch((e) => console.log(e));
 
 const insertOrderSalesInfo = (data) => {
     if (data && data.length) {
@@ -84,9 +82,9 @@ const insertOrderSalesInfo = (data) => {
             project_name: item.project_name,
             order_status: item.order_status,
             extra_expence: item.extra_expence,
-            item_count: item.item_count
+            item_count: item.item_count,
         }));
-        const cols = new vpsDB.pgp.helpers.ColumnSet(['order_number', 'created_at', 'phone_key', 'client_name', 'net_price', 'order_sum','project_name','order_status','extra_expence','item_count'], { table: 'order_sales' });
+        const cols = new vpsDB.pgp.helpers.ColumnSet(['order_number', 'created_at', 'phone_key', 'client_name', 'net_price', 'order_sum', 'project_name', 'order_status', 'extra_expence', 'item_count'], { table: 'order_sales' });
         vpsDB.dbInsert(values, cols);
     } else {
         console.log('Нет данных для записи. Отмена записи в БД');
@@ -120,7 +118,6 @@ const update = () => {
                 let toDate = moment().format('YYYY-MM-DD HH:mm:ss');
                 if (diff > 30) {
                     toDate = moment(lastUpdated).add(30, 'days').format('YYYY-MM-DD HH:mm:ss');
-
                 }
                 if (diff > 1) {
                     console.log(`Получаем данные по заказам за период с ${fromDate.toString().green} по ${toDate.toString().green}`);
@@ -138,7 +135,7 @@ const update = () => {
                 } else {
                     console.log('Нет данных для записи в базу или данные актуальны');
                 }
-            }).then(res => updateViews())
+            }).then((res) => updateViews())
             .catch((e) => console.log(e))
             .finally(() => {
                 inProgress = false;
@@ -152,4 +149,4 @@ update();
 setInterval(() => {
     update();
 }, updateInterval);
-//3600000
+// 3600000

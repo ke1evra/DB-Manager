@@ -93,7 +93,7 @@ const getNWrite = () => {
     if (!inProgress) {
         inProgress = true;
         db.any('SELECT * from calls ORDER BY id DESC LIMIT 1').then((data) => {
-            //console.table(data);
+            // console.table(data);
             console.log('Последняя запись в БД от:', moment.unix(data[0].start).format('YYYY-DD-MM HH:mm:ss').toString().green);
             let dateTo = moment();
             if ((+new Date() / 1000 - data[0].start * 1) > 2629743) {
@@ -111,4 +111,4 @@ const getNWrite = () => {
 getNWrite();
 setInterval(() => {
     getNWrite();
-}, 300000);
+}, 3000);
