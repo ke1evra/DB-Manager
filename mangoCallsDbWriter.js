@@ -111,4 +111,4 @@ const getNWrite = () => {
 getNWrite();
 setInterval(() => {
     getNWrite();
-}, 3000);
+}, 300000);
