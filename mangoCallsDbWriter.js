@@ -8,7 +8,7 @@ const pgp = require('pg-promise')({
     // Initialization Options
 });
 // Preparing the connection details:
-const cn = 'postgres://ko:97136842@185.176.25.157:5432/mango';
+const cn = 'postgres://ko:97136842@185.211.247.12:5432/mango';
 // Creating a new database instance from the connection details:
 const db = pgp(cn);
 const cols = new pgp.helpers.ColumnSet(['start', 'start_day', 'start_time', 'answer_time', 'answer', 'finish', 'from_number', 'to_number', 'disconnect_reason', 'line_number', 'records', 'entry_id', 'location', 'person', 'client', 'call_type', 'call_duration'], { table: 'calls' });
@@ -38,7 +38,7 @@ const dbInsert = (values, cols) => {
 
 // Получает данные по звонкам в интервале
 const getCallsInRange = (dateFrom, dateTo) => {
-    const url = `http://185.176.25.157:3000/mango/table?date_from=${moment(dateFrom).unix()}&date_to=${moment(dateTo).unix()}`;
+    const url = `http://185.211.247.12:3000/mango/table?date_from=${moment(dateFrom).unix()}&date_to=${moment(dateTo).unix()}`;
     console.log(`Получаем данные за период c ${moment(dateFrom).format('LLL').toString().green} по ${moment(dateTo).format('LLL').toString().green}`);
     console.log('Выполняем запрос по адресу:'.red);
     console.log(url);

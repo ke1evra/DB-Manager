@@ -7,7 +7,7 @@ const pgp = require('pg-promise')({
     // Initialization Options
 });
 // Preparing the connection details:
-const cn = 'postgres://ko:97136842@185.176.25.157:5432/mango';
+const cn = 'postgres://ko:97136842@185.211.247.12:5432/mango';
 // Creating a new database instance from the connection details:
 const db = pgp(cn);
 const cols = new pgp.helpers.ColumnSet(['start', 'start_day', 'start_time', 'answer_time', 'answer', 'finish', 'from_number', 'to_number', 'disconnect_reason', 'line_number', 'records', 'entry_id', 'location', 'person', 'client', 'call_type', 'call_duration'], { table: 'calls' });
